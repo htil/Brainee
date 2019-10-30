@@ -1,47 +1,60 @@
+/* Project: Brainee
+*  Program Name: LDAplot.js (React Component)
+*  Author: dshah3
+*  Date Created: 7/21/19
+*  Purpose: Linear Discriminant Analysis Plot with BCI.js
+*  Revision History:
+*  V1 contains basic LDA plot, V2 contains colored points, V3 contains separation of mental states
+*/ 
+
 import React, { Component } from 'react'
 import Plot from "react-plotly.js"
+//import React Context with all collected EEG Data from the trial
 import { DataContext } from "../contexts/DataContext";
+//math library
 import bci from "bcijs/browser.js"
 
+//LDAPlot component
 export class LDAPlot extends Component {
-    static contextType = DataContext;
-
-    plotLine = (m,b,x,firstArray, secondArray) => {
-
-      if (firstArray.length>0 && secondArray.length>0) {
-        if(m < 1){
-
-          var x1 = 0;
-          var x2 = 15;
-          var y1 = m * (x1-m) + b;
-          var y2 = m * (x2-m) + b;
   
+  //establishes the context being used as DataContext, which has all recorded EEG data
+  static contextType = DataContext;
+
+  //linear discriminant line function, contains slope, y-intercept, point number, and both data arrays as parameters
+  plotLine = (m,b,x,firstArray, secondArray) => {
+
+    //checks if data from both training sessions has been collected
+    if (firstArray.length>0 && secondArray.length>0) {
+      //checks if calculated slope is less than one, indicating negative correlation
+      if(m < 1){
+        var x1 = 0;
+        var x2 = 15;
+        var y1 = m * (x1-m) + b;
+        var y2 = m * (x2-m) + b;
       }else{
-  
-          var y1 = 0;
-          var y2 = 20;
-          var x1 = (y1 - b) / m;
-          var x2 = (y2 - b) / m;
-  
+        var y1 = 0;
+        var y2 = 20;
+        var x1 = (y1 - b) / m;
+        var x2 = (y2 - b) / m;
       }
-  
+
+      //for return access in later stages of analysis
       switch (x) {
           case 1:
-              return x1;
+            return x1;
           case 2:
-              return y1;
+            return y1;
           case 3:
-              return x2;
+            return x2;
           case 4:
-              return y2;
+            return y2;
           default:
-              break;
+            break;
+        }
       }
-      }
-      else{
-        return;
-      }
-      
+    else{
+      return;
+    }
   }
 
     computeFeatures = (cspParams, eeg) => {
@@ -144,10 +157,45 @@ export class LDAPlot extends Component {
           var ldaLine4 = this.plotLine(m,b,4, training1, training2);
         }
 
+        else{
+          ldaLine1 = 0;
+          ldaLine2 = 0;
+          ldaLine3 = 0;
+          ldaLine4 = 0;
+        }
+
         if(training1.length>0 && training2.length>0 && testing.length>0){
+
           var ldaSet5 = this.createXPoints(this.getLDAPoints(training1, training2, testing, 3))
           var ldaSet6 = this.createYPoints(this.getLDAPoints(training1, training2, testing, 3))
+
+          console.log(ldaSet5);
+
+          var class1Array = [];
+          var class2Array = [];
+          var class3Array = [];
+          var class4Array = [];
+
+          for (var i = 0; i < ldaSet5.length; i++){
+            if (((ldaSet6[i]-this.plotLine(m,b,3,training1, training2))/(ldaSet5[i]-this.plotLine(m,b,1,training1,training2)))<m){
+              class1Array.push(ldaSet5[i]);
+              class2Array.push(ldaSet6[i]);
+            }
+            else{
+              class3Array.push(ldaSet5[i]);
+              class4Array.push(ldaSet6[i]);
+
+            }
+          }
+
+          console.log(class1Array);
+          console.log(class2Array);
+          console.log(class3Array);
+          console.log(class4Array);
+
         }
+
+        
         
         return (
             <Plot
@@ -158,6 +206,7 @@ export class LDAPlot extends Component {
                   type: 'scatter',
                   mode: 'markers',
                   marker: {color: 'red', size: 10},
+                  name: 'Training Set 1'
                 },
 
                 {
@@ -166,22 +215,38 @@ export class LDAPlot extends Component {
                   type: 'scatter',
                   mode: 'markers',
                   marker: {color: 'blue', size: 10},
+                  name: 'Training Set 2'
                 },
 
                 {
-                  x: ldaSet5,
-                  y: ldaSet6,
+                  x: class1Array,
+                  y: class2Array,
                   type: 'scatter',
                   mode: 'markers',
-                  marker: {color: 'green', size: 10}
+                  marker: {color: 'green', size: 10},
+                  name: 'Testing Set 1'
+                },
+
+                {
+                  x: class3Array,
+                  y: class4Array,
+                  type: 'scatter',
+                  mode: 'markers',
+                  marker: {color: 'orange', size: 10},
+                  name: 'Testing Set 1'
                 }
+
+               
       
               ]}
 
                 layout={{
                     width: 950,
                     height: 500,
-                    title: 'Linear Discriminant Analysis',
+                    title: '<b>Linear Discriminant Analysis</b>',
+                    "titlefont": {
+                      "size": 20,
+                    },
 
                 xaxis: {
                     range: [2,15],
