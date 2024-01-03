@@ -6,7 +6,7 @@
     "@material-ui/core": "^4.2.1",
     "bcijs": "^1.6.3",
     "material-ui": "^0.20.2",
-    "plotly.js": "^1.49.0",
+    "plotly.js": "^2.25.2",
     "pondjs": "^0.8.8",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
